@@ -22,17 +22,17 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AttendeeService {
     private final AttendeeRepository attendeeRepository;
-    private final CheckinRepository checkinRepository;
+    private final CheckInService checkInService;
 
-    public List<Attendee> getAllAttendeesFromEvent(String eventId){
+    public List<Attendee> getAllAttendeesFromEvent(String eventId) {
         return this.attendeeRepository.findByEventId(eventId);
     }
 
-    public AttendeesListResponseDTO getEventsAttendee(String eventId){
+    public AttendeesListResponseDTO getEventsAttendee(String eventId) {
         List<Attendee> attendeeList = this.getAllAttendeesFromEvent(eventId);
 
         List<AttendeeDetailDTO> attendeeDetailDTOList = attendeeList.stream().map(attendee -> {
-            Optional<Checkin> checkin = this.checkinRepository.findByAttendeeId(attendee.getId());
+            Optional<Checkin> checkin = this.checkInService.getCheckIn(attendee.getId());
             LocalDateTime checkedInAt = checkin.<LocalDateTime>map(Checkin::getCreatedAt).orElse(null);
             return new AttendeeDetailDTO(
                     attendee.getId(),
@@ -45,21 +45,30 @@ public class AttendeeService {
         return new AttendeesListResponseDTO(attendeeDetailDTOList);
     }
 
-    public void verifyAttendeeSubscription(String email, String eventId){
+    public void verifyAttendeeSubscription(String email, String eventId) {
         Optional<Attendee> isAttendeeRegistered = this.attendeeRepository.findByEventIdAndEmail(eventId, email);
-        if(isAttendeeRegistered.isPresent()){
+        if (isAttendeeRegistered.isPresent()) {
             throw new AttendeeAlreadyExistException("Attendee is already registered");
         }
     }
 
-    public Attendee registerAttendee(Attendee newAttendee){
+    public Attendee registerAttendee(Attendee newAttendee) {
         return this.attendeeRepository.save(newAttendee);
     }
 
-    public AttendeeBadgeResponseDTO getAttendeeBadge(String attendeeId, UriComponentsBuilder uriComponentsBuilder){
-        Attendee attendee = this.attendeeRepository
+    public void checkInAttendee(String attendeeId) {
+        Attendee attendee = this.getAttendee(attendeeId);
+        this.checkInService.registerCheckIn(attendee);
+    }
+
+    private Attendee getAttendee(String attendeeId) {
+        return this.attendeeRepository
                 .findById(attendeeId).orElseThrow(() ->
                         new AttendeeNotFoundException(STR."attendee not found whith ID: \{attendeeId}"));
+    }
+
+    public AttendeeBadgeResponseDTO getAttendeeBadge(String attendeeId, UriComponentsBuilder uriComponentsBuilder) {
+        Attendee attendee = this.getAttendee(attendeeId);
 
         var uri = uriComponentsBuilder
                 .path("/attendees/{attendeeId}/check-in")

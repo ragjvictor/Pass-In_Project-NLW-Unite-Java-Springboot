@@ -15,7 +15,7 @@ import java.util.Optional;
 public class CheckInService {
     private final CheckinRepository checkinRepository;
 
-    public void checkInAttendee(Attendee attendee) {
+    public void registerCheckIn(Attendee attendee) {
         this.verifyCheckInExists(attendee.getId());
         Checkin newCheckin = new Checkin();
         newCheckin.setAttendee(attendee);
@@ -25,9 +25,13 @@ public class CheckInService {
     }
 
     private void verifyCheckInExists(String attendeeId) {
-        Optional<Checkin> isCheckedIn = this.checkinRepository.findByAttendeeId(attendeeId);
+        Optional<Checkin> isCheckedIn = this.getCheckIn(attendeeId);
         if (isCheckedIn.isPresent()) {
             throw new CheckInAlreadyExistsException("Attendee already checked in");
         }
+    }
+
+    public Optional<Checkin> getCheckIn(String attendeeId) {
+        return this.checkinRepository.findByAttendeeId(attendeeId);
     }
 }
