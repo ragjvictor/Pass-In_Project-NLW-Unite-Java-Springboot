@@ -8,6 +8,6 @@ public record AttendeeDetailDTO(
         String email,
         LocalDateTime createdAt,
         LocalDateTime checkedInAt
-){
+) {
 
 }

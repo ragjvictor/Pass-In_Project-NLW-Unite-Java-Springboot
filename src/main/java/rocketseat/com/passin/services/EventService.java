@@ -30,7 +30,7 @@ public class EventService {
         return new EventResponseDTO(event, attendeeList.size());
     }
 
-    public EventIdDTO createEvent(EventRequestDTO eventDTO){
+    public EventIdDTO createEvent(EventRequestDTO eventDTO) {
         Event newEvent = new Event();
         newEvent.setTitle(eventDTO.title());
         newEvent.setDetails(eventDTO.details());
@@ -42,13 +42,13 @@ public class EventService {
         return new EventIdDTO(newEvent.getId());
     }
 
-    public AttendeeIdDTO registerAttendeeOnEvent(String eventId, AttendeeRequestDTO attendeeRequestDTO){
-        this.attendeeService.verifyAttendeeSubscription(attendeeRequestDTO.email(),eventId);
+    public AttendeeIdDTO registerAttendeeOnEvent(String eventId, AttendeeRequestDTO attendeeRequestDTO) {
+        this.attendeeService.verifyAttendeeSubscription(attendeeRequestDTO.email(), eventId);
 
         Event event = this.getEventById(eventId);
         List<Attendee> attendeeList = this.attendeeService.getAllAttendeesFromEvent(eventId);
 
-        if(event.getMaximumAttendees() <= attendeeList.size()){
+        if (event.getMaximumAttendees() <= attendeeList.size()) {
             throw new EventFullException("Event is full");
         }
 
@@ -62,13 +62,13 @@ public class EventService {
         return new AttendeeIdDTO(newAttendee.getId());
     }
 
-    private Event getEventById(String eventId){
+    private Event getEventById(String eventId) {
         return this.eventRepository
                 .findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException(STR."Event not found with ID: \{eventId}"));
     }
 
-    private String createSlug(String text){
+    private String createSlug(String text) {
         String normalized = Normalizer.normalize(text, Normalizer.Form.NFD);
         return normalized.replaceAll("[\\p{InCOMBINING_DIACRITICAL_MARKS}]", "")
                 .replaceAll("[^\\w\\s]]", "")
